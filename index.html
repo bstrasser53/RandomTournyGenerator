@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="stylesheet" href="styles.css">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<body>
+
+<h2>Equalize Team Ratings</h2>
+<t1>Written by Bernhard Strasser ([o.p.]kanalratte). Version 0.1. Feel free to use or reuse this html & javascript code.</t1><br>
+<t1>Usage: 1) Define player per match and team, maximum rating difference, and maximum shown matches. 2) Add players to each team.</t1><br>
+<t1>3) Select players who need to play in the next match by left-clicking them.</t1><br>
+<t1>4) Select players who must not play in the next match by right-clicking them. 5) Press "Start Calculation".</t1><br>
+<br>
+<br>
+<br>
+<label for="PartySizeText">Players per Match and per Team:</label>
+<tab id=t1><input type="number" value="4" id="PartySize" name="PartySize" required
+       minlength="1" maxlength="3" size="3">
+<label for="MaxRatingDiffText">Maximum Allowed Rating Difference:</label>
+<tab id=t1><input type="number" value="200" id="MaxRatingDiff" name="MaxRatingDiff" required
+       minlength="1" maxlength="4" size="4">
+<label for="MaxShownMatchesText">Maximum Shown Matches:</label>
+<tab id=t1><input type="number" value="100" id="MaxShownMatches" name="MaxShownMatches" required
+       minlength="1" maxlength="3" size="3">       
+<br>
+<br>
+<button type="button" onclick="CalcAndShowResults()">Start Calculation...</button>
+<br>
+<br>
+    
+<div class="container">
+	<div class="left-half">
+
+		<h1>Team A</h1>
+		<div class="addplayer-group">
+			<h2>New Player: </h2>
+		</div>
+
+		<div class="addplayer-group">			
+			<label for="PlayerNameTeamA">Player Name:</label>
+			<tab id=t1><input type="text" id="NewPlayerNameTeamA" name="NewPlayerNameTeamA"
+				   minlength="1" maxlength="14" size="14">
+			<label for="PlayerRatingTeamA">Rating:</label>
+			<tab id=t1><input type="number" value="1000" id="NewPlayerRatingTeamA" name="NewPlayerRatingTeamA" required
+				   minlength="1" maxlength="4" size="4">
+			<button type="button" onclick="AddPlayerTeamA()">Add Player</button>
+		</div>
+
+		<div class="addplayer-group">
+			<h2>Players: </h2>
+		</div>
+		
+		<div class="btn-group" id='TeamAPlayersDiv'>	
+		</div>
+		
+		<div class="addplayer-group">
+			<h2>Possible Matches: </h2>
+		</div>
+		
+		<div class="result-table-TeamA">
+			<table id='TeamAResultTable'>
+			</table>	
+		</div>	
+
+
+	</div>
+	<div class="right-half">
+
+		<h1>Team B</h1>
+
+		<div class="addplayer-group">
+			<h2>New Player: </h2> 
+		</div>
+		<div class="addplayer-group">
+			<label for="PlayerNameTeamB">Player Name:</label>
+			<tab id=t1><input type="text" id="NewPlayerNameTeamB" name="NewPlayerNameTeamB"
+				   minlength="1" maxlength="14" size="14">
+			<label for="PlayerRatingTeamB">Rating:</label>
+			<tab id=t1><input type="number" value="1000" id="NewPlayerRatingTeamB" name="NewPlayerRatingTeamB" required
+				   minlength="1" maxlength="4" size="4">
+			<button type="button" onclick="AddPlayerTeamB()">Add Player</button>
+		</div>
+
+		<div class="addplayer-group">
+			<h2>Players: </h2>
+		</div>
+		<div class="btn-group" id='TeamBPlayersDiv'>
+		</div>
+		
+		<div class="addplayer-group">
+			<h2>Possible Matches: </h2>
+		</div>
+				
+		<div class="result-table-TeamB">
+			<table id='TeamBResultTable'>
+			</table>		
+		</div>		
+		
+	</div>
+</div>
+
+
+<br>
+
+
+<script>
+
+var TeamA = {Names: [], Ratings: [], PlayerNo: 0};
+var TeamB = {Names: [], Ratings: [], PlayerNo: 0};
+var FilterOptions = {MaxRatingDiff:[], TeamA_WantedPlayers:[], TeamA_UnwantedPlayers:[], TeamB_WantedPlayers:[], TeamB_UnwantedPlayers:[], MaxShownMatches: []};
+
+function AddPlayerTeamA() {
+	var PlayerName = document.getElementById("NewPlayerNameTeamA").value;
+	var PlayerRating = parseInt(document.getElementById("NewPlayerRatingTeamA").value);
+
+
+	if(TeamA.PlayerNo > 15)
+	{
+		return 1;
+	}
+
+	// Default Rating
+	if(isNaN(PlayerRating)){
+		PlayerRating = 1000;
+	}
+
+	// Default Name
+	if(PlayerName == ""){
+		// Search how often default name is already in use
+		NStandardNames = 0;
+		for (let ii=0;  ii<TeamA.PlayerNo; ii++){
+			CurName = TeamA.Names[ii];
+			if(CurName.match(/Name\s*A\d+/i) !== null){
+				NStandardNames++;
+			}
+		}
+		PlayerName = "Name A" + (NStandardNames+1);
+	}	  
+	  
+	// Add Player to Team
+	TeamA.Names.push(PlayerName);
+	TeamA.Ratings.push(PlayerRating);
+	TeamA.PlayerNo = TeamA.PlayerNo + 1;
+	
+	// Create button for new player
+	let btn = document.createElement("button");
+	btn.innerHTML = PlayerName + "<br>" + PlayerRating;
+	btn.style.width = '100px';
+	btn.style.height = '3rem';
+	btn.onclick = LeftClickOnPlayerTeamA;
+	btn.oncontextmenu = RightClickOnPlayerTeamA;
+	btn.addEventListener('contextmenu', e => {
+	e.preventDefault();
+	});
+	document.getElementById('TeamAPlayersDiv').appendChild(btn);
+	   	
+}
+
+
+function AddPlayerTeamB() {
+	var PlayerName = document.getElementById("NewPlayerNameTeamB").value;
+	var PlayerRating = parseInt(document.getElementById("NewPlayerRatingTeamB").value);
+
+	if(TeamB.PlayerNo > 15)
+	{
+		return 1;
+	}
+
+	// Default Rating
+	if(isNaN(PlayerRating)){
+		PlayerRating = 1000;
+	}
+
+	// Default Name
+	if(PlayerName == ""){
+		// Search how often default name is already in use
+		NStandardNames = 0;
+		for (let ii=0;  ii<TeamB.PlayerNo; ii++){
+			CurName = TeamB.Names[ii];
+			if(CurName.match(/Name\s*B\d+/i) !== null){
+				NStandardNames++;
+			}
+		}
+		PlayerName = "Name B" + (NStandardNames+1);
+	}	
+
+	TeamB.Names.push(PlayerName);
+	TeamB.Ratings.push(PlayerRating);
+	TeamB.PlayerNo = TeamB.PlayerNo + 1;
+	
+	// Create button for new player
+	let btn = document.createElement("button");
+	btn.innerHTML = PlayerName + "<br>" + PlayerRating;
+	btn.style.width = '100px';
+	btn.style.height = '3rem';
+	btn.onclick = LeftClickOnPlayerTeamB;
+	btn.oncontextmenu = RightClickOnPlayerTeamB;
+	btn.addEventListener('contextmenu', e => {
+	e.preventDefault();
+	});
+	document.getElementById('TeamBPlayersDiv').appendChild(btn);
+	
+}
+
+
+function LeftClickOnPlayerTeamA(){ 
+	PlayerNo = this.innerHTML;
+	PlayerNo = PlayerNo.match(/.*?(?=<br>|$)/i)[0];
+	PlayerNo = TeamA.Names.indexOf(PlayerNo);
+	
+	// If left-clicking on green player --> set color back to normal, and remove player from Wanted-Players list
+	if( this.style.backgroundColor == "rgb(0, 255, 0)"){
+		this.style.backgroundColor = '';
+		Indie = FilterOptions.TeamA_WantedPlayers.indexOf(PlayerNo);
+		FilterOptions.TeamA_WantedPlayers.splice(Indie,1);			
+	}
+	// If color was red before: Remove player from unwanted players. If color was red or none before: Change color to green and add player to Wanted player
+	else{
+		if(this.style.backgroundColor == "rgb(255, 0, 0)"){
+			Indie = FilterOptions.TeamA_UnwantedPlayers.indexOf(PlayerNo);
+			FilterOptions.TeamA_UnwantedPlayers.splice(Indie,1);	
+		}
+		FilterOptions.TeamA_WantedPlayers.push(PlayerNo);
+		this.style.backgroundColor = 'rgb(0, 255, 0)';
+	}
+	
+}
+
+function RightClickOnPlayerTeamA(){ 
+	PlayerNo = this.innerHTML;
+	PlayerNo = PlayerNo.match(/.*?(?=<br>|$)/i)[0];
+	PlayerNo = TeamA.Names.indexOf(PlayerNo);
+	
+	// If right-clicking on red player --> set color back to normal, and remove player from UnWanted-Players list
+	if( this.style.backgroundColor == "rgb(255, 0, 0)"){
+		this.style.backgroundColor = '';
+		Indie = FilterOptions.TeamA_UnwantedPlayers.indexOf(PlayerNo);
+		FilterOptions.TeamA_UnwantedPlayers.splice(Indie,1);		
+	}
+	// If color was green before: Remove player from unwanted players. If color was red or none before: Change color to green and add player to Wanted player
+	else{
+		if(this.style.backgroundColor == "rgb(0, 255, 0)"){
+			Indie = FilterOptions.TeamA_WantedPlayers.indexOf(PlayerNo);
+			FilterOptions.TeamA_WantedPlayers.splice(Indie,1);
+		}
+		FilterOptions.TeamA_UnwantedPlayers.push(PlayerNo);
+		this.style.backgroundColor = 'rgb(255, 0, 0)';
+	}
+	
+}
+
+function LeftClickOnPlayerTeamB(){ 
+	PlayerNo = this.innerHTML;
+	PlayerNo = PlayerNo.match(/.*?(?=<br>|$)/i)[0];
+	PlayerNo = TeamB.Names.indexOf(PlayerNo);
+	
+	// If left-clicking on green player --> set color back to normal, and remove player from Wanted-Players list
+	if( this.style.backgroundColor == "rgb(0, 255, 0)"){
+		this.style.backgroundColor = '';
+		Indie = FilterOptions.TeamB_WantedPlayers.indexOf(PlayerNo);
+		FilterOptions.TeamB_WantedPlayers.splice(Indie,1);			
+	}
+	// If color was red before: Remove player from unwanted players. If color was red or none before: Change color to green and add player to Wanted player
+	else{
+		if(this.style.backgroundColor == "rgb(255, 0, 0)"){
+			Indie = FilterOptions.TeamB_UnwantedPlayers.indexOf(PlayerNo);
+			FilterOptions.TeamB_UnwantedPlayers.splice(Indie,1);
+		}
+		FilterOptions.TeamB_WantedPlayers.push(PlayerNo);
+		this.style.backgroundColor = 'rgb(0, 255, 0)';
+	}
+	
+}
+
+function RightClickOnPlayerTeamB(){ 
+	PlayerNo = this.innerHTML;
+	PlayerNo = PlayerNo.match(/.*?(?=<br>|$)/i)[0];
+	PlayerNo = TeamB.Names.indexOf(PlayerNo);
+	
+	// If right-clicking on red player --> set color back to normal, and remove player from UnWanted-Players list
+	if( this.style.backgroundColor == "rgb(255, 0, 0)"){
+		this.style.backgroundColor = '';
+			Indie = FilterOptions.TeamB_UnwantedPlayers.indexOf(PlayerNo);
+			FilterOptions.TeamB_UnwantedPlayers.splice(Indie,1);	
+	}
+	// If color was green before: Remove player from unwanted players. If color was red or none before: Change color to green and add player to Wanted player
+	else{
+		if(this.style.backgroundColor == "rgb(0, 255, 0)"){
+			Indie = FilterOptions.TeamB_WantedPlayers.indexOf(PlayerNo);
+			FilterOptions.TeamB_WantedPlayers.splice(Indie,1);
+		}
+		FilterOptions.TeamB_UnwantedPlayers.push(PlayerNo);
+		this.style.backgroundColor = 'rgb(255, 0, 0)';
+	}
+	
+}
+
+
+
+function CalcAndShowResults() {
+
+	FilterOptions.MaxShownMatches = parseInt(document.getElementById("MaxShownMatches").value);
+	FilterOptions.MaxRatingDiff = parseInt(document.getElementById("MaxRatingDiff").value);
+	var PartySize = parseInt(document.getElementById("PartySize").value);
+
+
+	// Calculate all possible parties for both teams
+	AllPartiesTeamA = CalcAllUniqueCombinations(TeamA.PlayerNo,PartySize);
+	AllPartiesTeamB = CalcAllUniqueCombinations(TeamB.PlayerNo,PartySize);
+	
+	HumanReadableMatches = [];
+	
+	// Don't calculate anything if there are no parties in TeamA or TeamB
+	if(AllPartiesTeamA.length !== 0 && AllPartiesTeamB.length !== 0){
+		// Calculate all possible matches
+		AllMatches = CalcAllMatches(AllPartiesTeamA, AllPartiesTeamB,TeamA,TeamB,PartySize);
+		
+		// Sort Matches by Rating-Diff
+		AllMatches.sort(compareByLastColumn);
+		
+		// Filter Matches
+		FilteredMatches = FilterMatches(AllMatches,FilterOptions);
+		
+		// Create Human-Readable Matches
+		HumanReadableMatches = HumanizeMatches(FilteredMatches,TeamA,TeamB);
+	}
+
+	// Create output in form of table
+	
+	//let table = document.querySelector("table");
+	
+	ResultTableA = document.getElementById("TeamAResultTable");
+	ResultTableB = document.getElementById("TeamBResultTable");	
+	
+	// Remove content of tables
+	ResultTableA.innerHTML = "";
+	ResultTableB.innerHTML = "";
+	
+	
+	TotTableHead = ["MatchId"];
+	for (let jj=0;  jj<2; jj++){	
+		for (let ii=0;  ii<PartySize; ii++){
+			TotTableHead.push("Player " + (ii+1));
+		}
+	}
+	TotTableHead.push("Rating Diff (A-B)");
+	
+	generateTableHead(ResultTableA, TotTableHead.slice(0, PartySize+1));
+    generateTable(ResultTableA,HumanReadableMatches,0,PartySize+1);
+    ResultTableA.border = 3;
+ 
+ 
+    
+   	generateTableHead(ResultTableB, TotTableHead.slice(PartySize+1,2*PartySize+2));
+    ResultTableB.border = 3;
+    generateTable(ResultTableB,HumanReadableMatches,PartySize+1,2*PartySize+2);   
+
+
+	
+}
+
+
+function FilterMatches(AllMatches,FilterOptions) {
+	
+	// Filter Matches
+	FilteredMatches = [];
+	RatingDiffIndex = AllMatches[0].length - 1;
+	PartySize = (AllMatches[0].length-2)/2;
+	CurSavedMatches = 0;
+	for (let ii=0;  ii<AllMatches.length; ii++){
+		
+			// Max Shown Matches Condition
+			if(CurSavedMatches >= FilterOptions.MaxShownMatches){
+				break;
+			}
+		
+			// Absolute Rating Difference Condition
+			RatingDifferenceCondition = Math.abs(AllMatches[ii][RatingDiffIndex]) <= FilterOptions.MaxRatingDiff;
+			
+			// Wanted Player Conditions for Both Teams
+			WantedPlayersCondition = CheckForWantedPlayer(AllMatches[ii],FilterOptions.TeamA_WantedPlayers,true);
+			if(WantedPlayersCondition){
+				WantedPlayersCondition = WantedPlayersCondition && CheckForWantedPlayer(AllMatches[ii],FilterOptions.TeamB_WantedPlayers,false);							
+			}
+
+			// Unwanted Player Conditions for Both Teams
+			UnwantedPlayersCondition = CheckForUnwantedPlayer(AllMatches[ii],FilterOptions.TeamA_UnwantedPlayers,true);		
+			if(UnwantedPlayersCondition){
+				UnwantedPlayersCondition = CheckForUnwantedPlayer(AllMatches[ii],FilterOptions.TeamB_UnwantedPlayers,false);						
+			}
+
+			// Save Matches which Fulfill Our Wishes
+			if(RatingDifferenceCondition && WantedPlayersCondition && UnwantedPlayersCondition)
+			{
+				CurSavedMatches++;
+				FilteredMatches.push(AllMatches[ii]);
+			}
+	}
+	
+	return FilteredMatches;
+	
+}
+
+
+function HumanizeMatches(FilteredMatches,TeamA,TeamB){
+	
+	if(FilteredMatches.length == 0)
+	{
+		HumanReadableMatches = [];
+		return HumanReadableMatches;
+	}
+	
+	PartySize = (FilteredMatches[0].length-2)/2;
+	
+	// Make a deep copy of filtered matches
+	HumanReadableMatches = [...FilteredMatches];
+	
+	// Replace player numbers by player names
+	for (let ii=0;  ii<HumanReadableMatches.length; ii++){	
+		for (let jj=1;  jj<HumanReadableMatches[ii].length-1; jj++){
+			if(jj <= PartySize){
+				HumanReadableMatches[ii][jj] = TeamA.Names[HumanReadableMatches[ii][jj]];
+			}
+			else
+			{
+				HumanReadableMatches[ii][jj] = TeamB.Names[HumanReadableMatches[ii][jj]];				
+			}
+		}
+	}
+
+
+	
+	return HumanReadableMatches;
+
+}
+
+
+function CheckForWantedPlayer(CurMatch,WantedPlayers,TeamA_flag){
+  PartySize = (AllMatches[0].length-2)/2;
+	CurMatchIndex_TeamOffset = 1;
+	if(!TeamA_flag){
+		CurMatchIndex_TeamOffset = PartySize+1; 
+	}
+	WantedPlayersCondition = true;
+	for (let kk=0;  kk<WantedPlayers.length; kk++){
+		Tmp = false;
+		for (let jj=0;  jj<PartySize; jj++){
+			if(CurMatch[jj+CurMatchIndex_TeamOffset] == WantedPlayers[kk]){
+				Tmp = true; break;
+			}
+		}
+		if(!Tmp){
+			WantedPlayersCondition = false; break;
+		}
+	}	
+	return WantedPlayersCondition;
+}
+
+
+function CheckForUnwantedPlayer(CurMatch,UnwantedPlayers,TeamA_flag){
+  PartySize = (AllMatches[0].length-2)/2;
+	CurMatchIndex_TeamOffset = 1;
+	if(!TeamA_flag){
+		CurMatchIndex_TeamOffset = PartySize+1; 
+	}
+	
+	UnwantedPlayersCondition = true;
+	for (let kk=0;  kk<UnwantedPlayers.length; kk++){
+		for (let jj=0;  jj<PartySize; jj++){
+			if(CurMatch[jj+CurMatchIndex_TeamOffset] == UnwantedPlayers[kk]){
+				UnwantedPlayersCondition = false; break;
+			}
+		}
+		if(!UnwantedPlayersCondition){
+			break;
+		}
+	}	
+	return UnwantedPlayersCondition;
+}
+
+function CalcAllMatches(AllPartiesTeamA, AllPartiesTeamB,TeamA,TeamB) {
+		
+	// Calculate all possible matches
+	PartySize = AllPartiesTeamA[0].length;
+	var AllMatches = get2DArray(AllPartiesTeamA.length*AllPartiesTeamB.length);
+	CurMatch = -1;
+	for (let ii=0;  ii<AllPartiesTeamA.length; ii++){
+		for (let jj=0;  jj<AllPartiesTeamB.length; jj++){		
+			CurMatch++;
+			
+			AllMatches[CurMatch][0] = CurMatch;
+
+			RatingDiff = 0;
+			for (let kk=0; kk<PartySize; kk++ ){
+				RatingDiff = RatingDiff + TeamA.Ratings[ AllPartiesTeamA[ii][kk] ] - TeamB.Ratings[ AllPartiesTeamB[jj][kk] ];
+				AllMatches[CurMatch][kk+1] = AllPartiesTeamA[ii][kk];
+				AllMatches[CurMatch][kk+1+PartySize] = AllPartiesTeamB[jj][kk];
+			}
+		  AllMatches[CurMatch][2*PartySize+1] = RatingDiff;
+		}
+	}
+	return AllMatches;
+
+}
+
+
+
+
+function CalcAllUniqueCombinations(n, k) {
+	var result = [];
+
+	// No possible combinations for k > n
+	if(k > n){
+		return result;
+	}
+
+	// initialize array of values
+	var values = [];
+	for (var i = 1; i <= n; i++) {
+		values[i - 1] = i-1;
+	}
+
+	// initialize permutations
+	var perm = [];
+	for (var i = 0; i < n; i++) {
+		if (i < k) {
+			perm[i] = 1;
+		} else {
+			perm[i] = 0;
+		}
+	}
+	perm.sort();
+
+	whileloop:
+	while (true) 
+	{
+		// save subresult
+		var subresult = [];
+		for (var i = 0; i < n; i++) {
+			if (perm[i] == 1) {
+				subresult.push(values[i]);
+			}
+		}
+		result.push(subresult);
+
+		// get next permutation
+		for (var i = n - 1; i > 0; i--) {
+			if (perm[i - 1] == 1) {
+				continue;
+			}
+			if (perm[i] == 1) {
+				perm[i - 1] = 1;
+				perm[i] = 0;
+				perm = perm.slice(0, i).concat(perm.slice(i).sort())
+				continue whileloop;
+			}
+		}
+
+		// no additional permutations exist
+		break whileloop;
+	}
+
+	return result;
+}
+
+
+function get2DArray(size) {
+    size = size > 0 ? size : 0;
+    var arr = [];
+
+    while(size--) {
+        arr.push([]);
+    }
+
+    return arr;
+}
+
+
+function compareByLastColumn(a, b) {
+    if (a[a.length -1] === b[b.length -1]) {
+        return 0;
+    }
+    else {
+        return (Math.abs(a[a.length -1]) < Math.abs(b[b.length - 1])) ? -1 : 1;
+    }
+}
+
+
+function generateTableHead(table, data) {
+	let thead = table.createTHead();
+	let row = thead.insertRow();
+	for (let key of data) {
+		let th = document.createElement("th");
+		let text = document.createTextNode(key);
+		th.appendChild(text);
+		row.appendChild(th);
+	}
+}
+
+
+function generateTable(table, data,TableColIndexFrom,TableColIndexEnd) {
+
+	for (let ii=0;  ii<data.length; ii++){
+		CurRow = data[ii];	
+    	let row = table.insertRow();		
+		for (let jj=TableColIndexFrom;  jj<TableColIndexEnd; jj++){		
+      		let cell = row.insertCell();
+       		let text = document.createTextNode(CurRow[jj]);    
+        	cell.appendChild(text); 
+        	cell.style.textAlign='center';    		 				
+		}
+		
+	}
+}
+
+
+
+
+
+
+
+
+</script>
+
+
+</body>
+</html>
