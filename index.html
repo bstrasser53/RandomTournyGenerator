@@ -5,11 +5,11 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <body>
 
-<h2>Equalize Team Ratings</h2>
-<t1>Written by Bernhard Strasser ([o.p.]kanalratte). Version 0.1. Feel free to use or reuse this html & javascript code.</t1><br>
-<t1>Usage: 1) Define player per match and team, maximum rating difference, and maximum shown matches. 2) Add players to each team.</t1><br>
-<t1>3) Select players who need to play in the next match by left-clicking them.</t1><br>
-<t1>4) Select players who must not play in the next match by right-clicking them. 5) Press "Start Calculation".</t1><br>
+<h2>Random Tournament Generator</h2>
+<t1>Written by Bernhard Strasser ([o.p.]kanalratte). Version 0.2. Feel free to use or reuse this html & javascript code.</t1><br>
+<t1>Usage: 1) Define player per match and team, maximum rating difference, and maximum shown matches. 2) Add players.</t1><br>
+<t1>3) Select players who need to play in the next match by left-clicking them. 4) Select players who must not play in the next match by right-clicking them.</t1><br>
+<t1>5) Press "Start Calculation". Remark: You can load default values by clicking on the corresponding button.</t1><br>
 <br>
 <br>
 <br>
@@ -17,7 +17,7 @@
 <tab id=t1><input type="number" value="2" id="PartySize" name="PartySize" required
        minlength="1" maxlength="3" size="3">
 <label for="MaxRatingDiffText">Maximum Allowed Rating Difference:</label>
-<tab id=t1><input type="number" value="200" id="MaxRatingDiff" name="MaxRatingDiff" required
+<tab id=t1><input type="number" value="100" id="MaxRatingDiff" name="MaxRatingDiff" required
        minlength="1" maxlength="4" size="4">   
 <label for="CivsPerTeamText">Civs Per Team:</label>
 <tab id=t1><input type="number" value="4" id="CivsPerTeam" name="CivsPerTeam" required
@@ -259,15 +259,15 @@ function LoadDefaults(){
 	AddPlayer("Andi",1750);
 	AddPlayer("Martin",1700);
 	AddPlayer("Berni",1500);
-	AddPlayer("Sam",1350);
-	AddPlayer("Bene",1400);
-	AddPlayer("Günter",1400);
+	AddPlayer("Sam",1400);
+	AddPlayer("Bene",1300);
+	AddPlayer("Günter",1300);
 	
 	AddMap("Arabia");
+	AddMap("Runestones");	
 	AddMap("Hideout");
 	AddMap("Arena");
-	AddMap("Land Nomad");
-	AddMap("Runestones");	
+
 
 }
 
