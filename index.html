@@ -314,13 +314,19 @@ function CalcAndShowResults() {
 	CivsPerTeam = parseInt(document.getElementById("CivsPerTeam").value);
 	CivsTeamAText = "Allowed Civs: ";
 	CivsTeamBText = "Allowed Civs: ";
+	CurAvailableCivs = [...Civs];
 	for (let ii=0;  ii<CivsPerTeam; ii++){
-		RandInt = getRandomInt(Civs.length);
-		ChosenCivsTeamA.push(Civs[RandInt]);
-		CivsTeamAText = CivsTeamAText + Civs[RandInt] + ", ";
-		RandInt = getRandomInt(Civs.length);
-		ChosenCivsTeamB.push(Civs[RandInt]);
-		CivsTeamBText = CivsTeamBText + Civs[RandInt] + ", ";
+		// Team A
+		RandInt = getRandomInt(CurAvailableCivs.length);
+		ChosenCivsTeamA.push(CurAvailableCivs[RandInt]);
+		CivsTeamAText = CivsTeamAText + CurAvailableCivs[RandInt] + ", ";
+		CurAvailableCivs.splice(RandInt,1);
+
+		// Team B
+		RandInt = getRandomInt(CurAvailableCivs.length);
+		ChosenCivsTeamB.push(CurAvailableCivs[RandInt]);
+		CivsTeamBText = CivsTeamBText + CurAvailableCivs[RandInt] + ", ";
+		CurAvailableCivs.splice(RandInt,1);
 
 	}
 
