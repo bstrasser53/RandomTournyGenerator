@@ -116,7 +116,7 @@
 
 
 var AllPlayers = {Names: [], Ratings: [], PlayerNo: 0};
-var FilterOptions = {MaxRatingDiff:[], WantedPlayers:[], UnwantedPlayers:[]};
+var FilterOptions = {MaxRatingDiff:[], WantedPlayers:[], UnwantedPlayers:[], UnwantedMaps:[]};
 var AllMaps = {Names: [], MapNo: 0};
 var Civs = ["Aztecs", "Britons", "Byzantines", "Celts", "Chinese", "Franks", "Goths", "Japanese", "Mongols", "Persians", "Saracens", "Teutons", "Turks", "Vikings", "Huns", "Koreans", "Mayans", "Spanish", "Incas", "Indians", "Italians", "Magyars", "Slavs", "Berbers", "Ethiopians", "Malians", "Portuguese", "Burmese", "Khmer", "Malay", "Vietnamese", "Bulgarians", "Cumans", "Lithuanians", "Tatars", "Burgundians", "Sicilians", "Bohemians", "Poles", "Bengalis", "Dravidians", "Gurjaras", "Hindustanis"];
 
@@ -146,7 +146,7 @@ function AddMap(MapName) {
 	btn.style.width = '100px';
 	btn.style.height = '3rem';
 	//btn.onclick = LeftClickOnPlayer;
-	//btn.oncontextmenu = RightClickOnPlayer;
+	btn.oncontextmenu = RightClickOnMap;
 	btn.addEventListener('contextmenu', e => {
 	e.preventDefault();
 	});
@@ -252,6 +252,27 @@ function RightClickOnPlayer(){
 	
 }
 
+function RightClickOnMap(){ 
+	MapNo = this.innerHTML;
+	MapNo = MapNo.match(/.*?(?=<br>|$)/i)[0];
+	MapNo = AllMaps.Names.indexOf(MapNo);
+
+	
+	// If right-clicking on red map --> set color back to normal, and remove map from UnWanted-Map list
+	if( this.style.backgroundColor == "rgb(255, 0, 0)"){
+		this.style.backgroundColor = '';
+		Indie = FilterOptions.UnwantedMaps.indexOf(MapNo);
+		FilterOptions.UnwantedMaps.splice(Indie,1);		
+	}
+	// If color was none before: Change color to red and add map to UnWanted map
+	else{
+		FilterOptions.UnwantedMaps.push(MapNo);
+		this.style.backgroundColor = 'rgb(255, 0, 0)';
+	}
+	FilterOptions.UnwantedMaps.sort((a,b)=>a-b);	
+	
+}
+
 function LoadDefaults(){ 
 	AddPlayer("Alex",2100);
 	AddPlayer("Simon",1900);
@@ -302,9 +323,13 @@ function CalcAndShowResults() {
 		
 	}
 
-	// Choose map
-	ChosenMapInt = getRandomInt(AllMaps.Names.length);
-	ChosenMap = AllMaps.Names[ChosenMapInt];
+	// Choose map, but only from choosable maps (maps which were right-clicked by users are ignored)
+	ChoosableMaps = JSON.parse(JSON.stringify(AllMaps));
+	ChoosableMapNames = ChoosableMaps.Names;
+	for (var ii = FilterOptions.UnwantedMaps.length -1; ii >= 0; ii--)
+		ChoosableMapNames.splice(FilterOptions.UnwantedMaps[ii], 1);
+	ChosenMapInt = getRandomInt(ChoosableMapNames.length);
+	ChosenMap = ChoosableMapNames[ChosenMapInt];
 
 	// Choose Civs, totally random now (with double picks)
 	ChosenCivsTeamA = [];
