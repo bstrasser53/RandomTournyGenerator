@@ -39,6 +39,7 @@
 	<tab id=t1><input type="text" id="NewMapName" name="NewMapName"
 		   minlength="1" maxlength="14" size="14">
 	<button type="button" onclick="AddMapFromGUI()">Add Map</button>
+	<button type="button" onclick="RemoveMapFromGUI()">Remove Map</button>
 </div>
 <div class="btn-group" id='AllMapsDiv'>	
 </div> 
@@ -136,6 +137,11 @@ function AddMap(MapName) {
 	if(MapName == ""){
 		return 1;
 	}	  
+	
+	// If Map name exists already, do nothing
+	if(AllMaps.Names.includes(MapName) ){
+		return 1;
+	}
 	  
 	// Add Map
 	AllMaps.Names.push(MapName);
@@ -144,6 +150,7 @@ function AddMap(MapName) {
 	// Create button for new player
 	let btn = document.createElement("button");
 	btn.innerHTML = MapName;
+	btn.setAttribute("id", "Map"+MapName);
 	btn.style.width = '100px';
 	btn.style.height = '3rem';
 	//btn.onclick = LeftClickOnPlayer;
@@ -163,7 +170,12 @@ function AddPlayerFromGUI() {
 function RemovePlayerFromGUI() {
 	var PlayerName = document.getElementById("NewPlayerName").value;
 	var PlayerRating = parseInt(document.getElementById("NewPlayerRating").value);
-	RemovePlayer(PlayerName,PlayerRating)
+	RemovePlayer(PlayerName)
+}
+
+function RemoveMapFromGUI() {
+	var MapName = document.getElementById("NewMapName").value;
+	RemoveMap(MapName)
 }
 
 function AddPlayer(PlayerName,PlayerRating) {
@@ -219,7 +231,7 @@ function AddPlayer(PlayerName,PlayerRating) {
 }
 
 
-function RemovePlayer(PlayerName,PlayerRating) {
+function RemovePlayer(PlayerName) {
 
 	// No Name --> Do nothing
 	if(PlayerName == ""){
@@ -240,7 +252,39 @@ function RemovePlayer(PlayerName,PlayerRating) {
 	
 }
 
+function RemoveMap(MapName) {
 
+	// No Name --> Do nothing
+	if(MapName == ""){
+		return 1;
+	}	  
+	  
+	// Remove Map
+
+	MapNo = AllMaps.Names.indexOf(MapName);
+	AllMaps.Names.splice(MapNo,1);
+
+	AllMaps.MapNo = AllMaps.MapNo - 1;
+	
+	// Remove button for player
+	CurButton = document.getElementById("Map"+MapName);
+	if(CurButton != null){
+		document.getElementById('AllMapsDiv').removeChild(CurButton);
+	}
+	
+}
+
+function RemoveAllPlayers(){
+	while (AllPlayers.PlayerNo > 0){
+		RemovePlayer(AllPlayers.Names[0])
+	}
+}
+
+function RemoveAllMaps(){
+	while (AllMaps.MapNo > 0){
+		RemoveMap(AllMaps.Names[0])
+	}
+}
 
 
 function LeftClickOnPlayer(){ 
@@ -311,6 +355,9 @@ function RightClickOnMap(){
 }
 
 function LoadDefaults(){ 
+
+	RemoveAllPlayers();
+	RemoveAllMaps();
 	AddPlayer("Alex",2100);
 	AddPlayer("Marv",2000);	
 	AddPlayer("Simon",1900);
