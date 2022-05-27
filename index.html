@@ -56,6 +56,7 @@
 	<tab id=t1><input type="number" value="1000" id="NewPlayerRating" name="NewPlayerRating" required
 		   minlength="1" maxlength="4" size="4">
 	<button type="button" onclick="AddPlayerFromGUI()">Add Player</button>
+	<button type="button" onclick="RemovePlayerFromGUI()">Remove Player</button>
 </div>
 
 <div class="addplayer-group">
@@ -159,6 +160,12 @@ function AddPlayerFromGUI() {
 	AddPlayer(PlayerName,PlayerRating);
 }
 
+function RemovePlayerFromGUI() {
+	var PlayerName = document.getElementById("NewPlayerName").value;
+	var PlayerRating = parseInt(document.getElementById("NewPlayerRating").value);
+	RemovePlayer(PlayerName,PlayerRating)
+}
+
 function AddPlayer(PlayerName,PlayerRating) {
 
 
@@ -183,7 +190,13 @@ function AddPlayer(PlayerName,PlayerRating) {
 			}
 		}
 		PlayerName = "Name A" + (NStandardNames+1);
-	}	  
+	}
+	
+	// If Player name exists already, do nothing
+	if(AllPlayers.Names.includes(PlayerName) ){
+		return 1;
+	}
+		  
 	  
 	// Add Player to Team
 	AllPlayers.Names.push(PlayerName);
@@ -193,6 +206,7 @@ function AddPlayer(PlayerName,PlayerRating) {
 	// Create button for new player
 	let btn = document.createElement("button");
 	btn.innerHTML = PlayerName + "<br>" + PlayerRating;
+	btn.setAttribute("id", "Player"+PlayerName);
 	btn.style.width = '100px';
 	btn.style.height = '3rem';
 	btn.onclick = LeftClickOnPlayer;
@@ -203,6 +217,29 @@ function AddPlayer(PlayerName,PlayerRating) {
 	document.getElementById('AllPlayersDiv').appendChild(btn);
 	   	
 }
+
+
+function RemovePlayer(PlayerName,PlayerRating) {
+
+	// No Name --> Do nothing
+	if(PlayerName == ""){
+		return 1;
+	}	  
+	  
+	// Remove Player
+	PlayerNo = AllPlayers.Names.indexOf(PlayerName);
+	AllPlayers.Names.splice(PlayerNo,1);
+	AllPlayers.Ratings.splice(PlayerNo,1);
+	AllPlayers.PlayerNo = AllPlayers.PlayerNo - 1;
+	
+	// Remove button for player
+	CurButton = document.getElementById("Player"+PlayerName);
+	if(CurButton != null){
+		document.getElementById('AllPlayersDiv').removeChild(CurButton);
+	}
+	
+}
+
 
 
 
