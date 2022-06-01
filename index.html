@@ -6,10 +6,10 @@
 <body>
 
 <h2>Random Tournament Generator</h2>
-<t1>Written by Bernhard Strasser ([o.p.]kanalratte). Version 0.2. Feel free to use or reuse this html & javascript code.</t1><br>
-<t1>Usage: 1) Define player per match and team, maximum rating difference, and maximum shown matches. 2) Add players.</t1><br>
+<t1>Written by Bernhard Strasser ([o.p.]kanalratte). Version 0.3. Feel free to use or reuse this html & javascript code.</t1><br>
+<t1>Usage: 1) Define player per match and team, maximum rating difference, and maximum shown matches. 2) Add players and maps, and remove them again.</t1><br>
 <t1>3) Select players who need to play in the next match by left-clicking them. 4) Select players who must not play in the next match by right-clicking them.</t1><br>
-<t1>5) Right click maps you don't want to be played in next match. 6) Press "Start Calculation". Remark: You can load default values by clicking on the corresponding button.</t1><br>
+<t1>5) Right click maps you don't want to be played in next match. 6) Press "Start Calculation". Remark: You can load default values by clicking on the corresponding button or load from a text file.</t1><br>
 <br>
 <br>
 <br>
@@ -25,6 +25,8 @@
 <br>
 <br>
 
+<input type="file" accept='text/plain' onchange='LoadPlayersFromFile(event)' id="files" class="inputfile""/>
+<label for="files">Load File</label>
 <button type="button" onclick="LoadDefaults()">Load Defaults</button>
 <button type="button" onclick="CalcAndShowResults()">Start Calculation...</button>
 <br>
@@ -120,7 +122,7 @@
 var AllPlayers = {Names: [], Ratings: [], PlayerNo: 0};
 var FilterOptions = {MaxRatingDiff:[], WantedPlayers:[], UnwantedPlayers:[], UnwantedMaps:[]};
 var AllMaps = {Names: [], MapNo: 0};
-var Civs = ["Aztecs", "Britons", "Byzantines", "Celts", "Chinese", "Franks", "Goths", "Japanese", "Mongols", "Persians", "Saracens", "Teutons", "Turks", "Vikings", "Huns", "Koreans", "Mayans", "Spanish", "Incas", "Indians", "Italians", "Magyars", "Slavs", "Berbers", "Ethiopians", "Malians", "Portuguese", "Burmese", "Khmer", "Malay", "Vietnamese", "Bulgarians", "Cumans", "Lithuanians", "Tatars", "Burgundians", "Sicilians", "Bohemians", "Poles", "Bengalis", "Dravidians", "Gurjaras", "Hindustanis"];
+var Civs = ["Aztecs", "Britons", "Byzantines", "Celts", "Chinese", "Franks", "Goths", "Japanese", "Mongols", "Persians", "Saracens", "Teutons", "Turks", "Vikings", "Huns", "Koreans", "Mayans", "Spanish", "Incas", "Hindustanis", "Italians", "Magyars", "Slavs", "Berbers", "Ethiopians", "Malians", "Portuguese", "Burmese", "Khmer", "Malay", "Vietnamese", "Bulgarians", "Cumans", "Lithuanians", "Tatars", "Burgundians", "Sicilians", "Bohemians", "Poles", "Bengalis", "Dravidians", "Gurjaras"];
 
 
 function AddMapFromGUI() {
@@ -378,6 +380,34 @@ function LoadDefaults(){
 
 
 }
+
+
+var LoadPlayersFromFile = function(event) {
+	var input = event.target;
+	var reader = new FileReader();
+	reader.onload = function(){
+		var text = reader.result;
+		RemoveAllPlayers();
+		AddPlayersFromLoadedFile(text);
+	};
+	reader.readAsText(input.files[0]);
+	return 0;
+};
+
+function AddPlayersFromLoadedFile(text) {
+	
+	while (text.length > 2){
+		CurName = text.slice(0,text.indexOf(","));								// Take text from 0 to first occurence of a comma ","
+		CurName = CurName.replace(/[^a-zöüä]/ig,"");							// [^a-z] means anything not a letter. /ig means case instensitive and global (not just first match)	
+		CurElo = parseInt(text.slice(text.indexOf(",")+1,text.indexOf('\r')));	// Take text from first comma to carriage return, then convert to int
+		text = text.substring(text.indexOf('\r')+2,9999);						// Remove the part from 0 to the first carriage return
+		if(CurName !== "" && !isNaN(CurElo)){									// Only add player if we found meaningful input
+			AddPlayer(CurName,CurElo);
+		}
+	}
+	return 0;
+}
+
 
 function CalcAndShowResults() {
 
