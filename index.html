@@ -25,7 +25,8 @@
 <br>
 <br>
 
-<input type="file" accept='text/plain' onchange='LoadPlayersFromFile(event)' id="files" class="inputfile""/>
+<button onclick="download('Players.txt');">Save File</button>  
+<input type="file" accept='text/plain' onchange='LoadPlayersFromFile(event)' id="files" class="inputfile"/>
 <label for="files">Load File</label>
 <button type="button" onclick="LoadDefaults()">Load Defaults</button>
 <button type="button" onclick="CalcAndShowResults()">Start Calculation...</button>
@@ -408,6 +409,26 @@ function AddPlayersFromLoadedFile(text) {
 	return 0;
 }
 
+
+function linkDownload(a, filename, content) {
+	contentType =  'data:application/octet-stream,';
+	uriContent = contentType + encodeURIComponent(content);
+	a.setAttribute('href', uriContent);
+	a.setAttribute('download', filename);
+}
+function download(filename) {
+	var a = document.createElement('a');
+		
+	var text = "";	
+	for (let ii=0;  ii<AllPlayers.PlayerNo; ii++){
+		text = text + AllPlayers.Names[ii] + "," + AllPlayers.Ratings[ii] + "\r\n";	
+	}
+	
+	linkDownload(a, filename, text);
+	document.body.appendChild(a);
+	a.click();
+	document.body.removeChild(a);
+}
 
 function CalcAndShowResults() {
 
