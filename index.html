@@ -16,12 +16,21 @@
 <label for="PartySizeText">Players per Match and per Team:</label>
 <tab id=t1><input type="number" value="2" id="PartySize" name="PartySize" required
        minlength="1" maxlength="3" size="3">
-<label for="MaxRatingDiffText">Maximum Allowed Rating Difference:</label>
-<tab id=t1><input type="number" value="100" id="MaxRatingDiff" name="MaxRatingDiff" required
+<label for="MaxRatingMetricText">Maximum Allowed Rating Difference:</label>
+<tab id=t1><input type="number" value="100" id="MaxRatingMetric" name="MaxRatingMetric" required
        minlength="1" maxlength="4" size="4">   
 <label for="CivsPerTeamText">Civs Per Team:</label>
 <tab id=t1><input type="number" value="4" id="CivsPerTeam" name="CivsPerTeam" required
        minlength="1" maxlength="4" size="4">   
+<br>
+<br>
+<label for="MetricText">Metric for finding best matches:</label>
+<input type="radio" name="size" value="M" id="RadioButtonMatchAvg" checked>
+<label for="RadioButtonMatchAvg">Match average ratings</label>
+<input type="radio" name="size" value="M" id="RadioButtonMatchInd">
+<label for="RadioButtonMatchInd">Match individual ratings</label>
+<input type="radio" name="size" value="M" id="RadioButtonMatchBoth">
+<label for="RadioButtonMatchBoth">Match Both</label>
 <br>
 <br>
 
@@ -121,7 +130,7 @@
 
 
 var AllPlayers = {Names: [], Ratings: [], PlayerNo: 0};
-var FilterOptions = {MaxRatingDiff:[], WantedPlayers:[], UnwantedPlayers:[], UnwantedMaps:[]};
+var FilterOptions = {MaxRatingMetric:[], WantedPlayers:[], UnwantedPlayers:[], UnwantedMaps:[]};
 var AllMaps = {Names: [], MapNo: 0};
 var Civs = ["Aztecs", "Britons", "Byzantines", "Celts", "Chinese", "Franks", "Goths", "Japanese", "Mongols", "Persians", "Saracens", "Teutons", "Turks", "Vikings", "Huns", "Koreans", "Mayans", "Spanish", "Incas", "Hindustanis", "Italians", "Magyars", "Slavs", "Berbers", "Ethiopians", "Malians", "Portuguese", "Burmese", "Khmer", "Malay", "Vietnamese", "Bulgarians", "Cumans", "Lithuanians", "Tatars", "Burgundians", "Sicilians", "Bohemians", "Poles", "Bengalis", "Dravidians", "Gurjaras"];
 
@@ -432,7 +441,7 @@ function download(filename) {
 
 function CalcAndShowResults() {
 
-	FilterOptions.MaxRatingDiff = parseInt(document.getElementById("MaxRatingDiff").value);
+	FilterOptions.MaxRatingMetric = parseInt(document.getElementById("MaxRatingMetric").value);
 	var PartySize = parseInt(document.getElementById("PartySize").value);
 
 
@@ -541,14 +550,14 @@ function FilterMatches(AllMatches,FilterOptions) {
 	
 	// Filter Matches
 	FilteredMatches = [];
-	RatingDiffIndex = AllMatches[0].length - 1;
+	RatingMetricIndex = AllMatches[0].length - 1;
 	PartySize = (AllMatches[0].length-2)/2;
 	CurSavedMatches = 0;
 	for (let ii=0;  ii<AllMatches.length; ii++){
 		
 
 			// Absolute Rating Difference Condition
-			RatingDifferenceCondition = Math.abs(AllMatches[ii][RatingDiffIndex]) <= FilterOptions.MaxRatingDiff;
+			RatingMetricCondition = Math.abs(AllMatches[ii][RatingMetricIndex]) <= FilterOptions.MaxRatingMetric;
 			
 			// Wanted Player Conditions for Both Teams
 			WantedPlayersCondition = CheckForWantedPlayer(AllMatches[ii],FilterOptions.WantedPlayers);
@@ -557,7 +566,7 @@ function FilterMatches(AllMatches,FilterOptions) {
 			UnwantedPlayersCondition = CheckForUnwantedPlayer(AllMatches[ii],FilterOptions.UnwantedPlayers);		
 
 			// Save Matches which Fulfill Our Wishes
-			if(RatingDifferenceCondition && WantedPlayersCondition && UnwantedPlayersCondition)
+			if(RatingMetricCondition && WantedPlayersCondition && UnwantedPlayersCondition)
 			{
 				CurSavedMatches++;
 				FilteredMatches.push(AllMatches[ii]);
@@ -633,6 +642,19 @@ function CalcAllMatches(AllParties,AllPlayers) {
 		
 	// Calculate all possible matches
 	PartySize = AllParties[0].length/2;
+	
+		
+	if(document.getElementById("RadioButtonMatchAvg").checked) {
+		MetricFunction = CalcMetrtic_TotalRatingDifference;
+	}
+	else if(document.getElementById("RadioButtonMatchInd").checked){
+		MetricFunction = CalcMetrtic_TotalAbsoluteDifference;	
+	}
+	else if(document.getElementById("RadioButtonMatchBoth").checked){
+		MetricFunction = CalcMetrtic_TotalAbsoluteDifferenceAndTotalDifference;	
+	}
+	
+	
 	var AllMatches = get2DArray(AllParties.length);
 	CurMatch = -1;
 	for (let ii=0;  ii<AllParties.length; ii++){
@@ -640,17 +662,63 @@ function CalcAllMatches(AllParties,AllPlayers) {
 		
 		AllMatches[CurMatch][0] = CurMatch;
 
-		RatingDiff = 0;
+		RatingMetric = MetricFunction(PartySize,sliceByIndexArray(AllPlayers.Ratings,AllParties[ii].slice(0,PartySize)), sliceByIndexArray(AllPlayers.Ratings,AllParties[ii].slice(PartySize) ));
 		for (let kk=0; kk<PartySize; kk++ ){
-			RatingDiff = RatingDiff + AllPlayers.Ratings[ AllParties[ii][kk] ] - AllPlayers.Ratings[ AllParties[ii][kk+PartySize] ];
 			AllMatches[CurMatch][kk+1] = AllParties[ii][kk];
 			AllMatches[CurMatch][kk+1+PartySize] = AllParties[ii][kk+PartySize];
 		}
-	  AllMatches[CurMatch][2*PartySize+1] = RatingDiff;
+		AllMatches[CurMatch][2*PartySize+1] = RatingMetric;
 	}
 	return AllMatches;
 
 }
+
+
+function CalcMetrtic_TotalRatingDifference(PartySize, TeamARatings, TeamBRatings) {
+	TotRatingDiff = 0;
+	for (let kk=0; kk<PartySize; kk++ ){
+		TotRatingDiff = TotRatingDiff + TeamARatings[kk] - TeamBRatings[kk];
+	}
+	return TotRatingDiff;
+}
+
+function CalcMetrtic_TotalAbsoluteDifference(PartySize, TeamARatings, TeamBRatings) {
+	// Compare best player of Team A to best player of Team B, and second best players, and third best players etc. 
+	// Then calculate the absolute sum of those differences
+	TeamARatings.sort(compareNumbers);
+	TeamBRatings.sort(compareNumbers);
+	TotAbsRatingDiff = 0;
+	for (let kk=0; kk<PartySize; kk++ ){
+		TotAbsRatingDiff = TotAbsRatingDiff + Math.abs( TeamARatings[kk] - TeamBRatings[kk] );
+	}
+	return TotAbsRatingDiff;
+}
+
+
+
+function compareNumbers(a, b) {
+  return a - b;
+}
+
+
+function CalcMetrtic_TotalAbsoluteDifferenceAndTotalDifference(PartySize, TeamARatings, TeamBRatings) {
+	TotRatingDiff = 0.5*CalcMetrtic_TotalAbsoluteDifference(PartySize, TeamARatings, TeamBRatings) + 0.5*Math.abs(CalcMetrtic_TotalRatingDifference(PartySize, TeamARatings, TeamBRatings));
+	return TotRatingDiff;
+}
+
+
+
+// Function to take a subarray (slicing) based on index-array. In Matlab notation A(B), where A is an array, and B is an array of indices.
+// Currently only works along one dimension
+function sliceByIndexArray(InputArray, IndexArray) {
+	Output = [];
+	for (let kk=0; kk<IndexArray.length; kk++ ){
+	  Output.push(InputArray[IndexArray[kk]]);
+	}
+	return Output;
+}
+
+
 
 
 function CalcAllTeamPartitionsFor2TeamsOfSizek(PlayerNo,k) {
