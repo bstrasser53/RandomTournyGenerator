@@ -262,6 +262,25 @@ function RemovePlayer(PlayerName) {
 		document.getElementById('AllPlayersDiv').removeChild(CurButton);
 	}
 	
+	// Adapt left- and rightclicked players (if we remove a player, and some players after that player are left- or right-clicked, the wrong index will be stored in the 
+	// FilterOptions.WantedPlayers and UnwantedPlayers.
+	for (let ii=0;  ii<FilterOptions.WantedPlayers.length; ii++){ 
+		if(FilterOptions.WantedPlayers[ii] > PlayerNo) {
+			FilterOptions.WantedPlayers[ii] = FilterOptions.WantedPlayers[ii] - 1;
+		} 
+		else if(FilterOptions.WantedPlayers[ii] == PlayerNo) {
+			FilterOptions.WantedPlayers.splice(ii,1);
+		} 
+	}
+	for (let ii=0;  ii<FilterOptions.UnwantedPlayers.length; ii++){ 
+		if(FilterOptions.UnwantedPlayers[ii] > PlayerNo) {
+			FilterOptions.UnwantedPlayers[ii] = FilterOptions.UnwantedPlayers[ii] - 1;
+		} 
+		else if(FilterOptions.UnwantedPlayers[ii] == PlayerNo) {
+			FilterOptions.UnwantedPlayers.splice(ii,1);
+		} 
+	}	
+	
 }
 
 function RemoveMap(MapName) {
