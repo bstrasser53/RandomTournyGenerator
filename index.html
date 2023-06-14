@@ -7,9 +7,11 @@
 
 <h2>Random Tournament Generator</h2>
 <t1>Written by Bernhard Strasser ([o.p.]kanalratte). Version 0.3. Feel free to use or reuse this html & javascript code.</t1><br>
-<t1>Usage: 1) Define player per match and team, maximum rating difference, and maximum shown matches. 2) Add players and maps, and remove them again.</t1><br>
-<t1>3) Select players who need to play in the next match by left-clicking them. 4) Select players who must not play in the next match by right-clicking them.</t1><br>
-<t1>5) Right click maps you don't want to be played in next match. 6) Press "Start Calculation". Remark: You can load default values by clicking on the corresponding button or load from a text file.</t1><br>
+<t1>Usage: 1) Define player per match and team, maximum rating difference, and maximum shown matches. 2) Add players and maps, or remove wrong ones again.</t1><br>
+<t1>3) Choose a metric for finding fair teams. Match "average ratings": Minimize average rating difference of both teams; "individual rating": Minimize the difference between the best players of </t1><br>
+<t1>both teams, the second best, etc. So a 2000 and 1000 Elo player will not likely be matched with two 1500 Elo players. "Both": Mean of both metrics.</t1><br>
+<t1>4) Select players who need to play in the next match by left-clicking them. 5) Select players who must not play in the next match by right-clicking them.</t1><br>
+<t1>6) Right click maps you don't want to be played in next match. 7) Press "Start Calculation". Remark: You can load default values by clicking on the corresponding button or load from/save to a text file.</t1><br>
 <br>
 <br>
 <br>
@@ -427,7 +429,7 @@ function AddPlayersFromLoadedFile(text) {
 	
 	while (text.length > 2){
 		CurName = text.slice(0,text.indexOf(","));								// Take text from 0 to first occurence of a comma ","
-		CurName = CurName.replace(/[^a-zöüä]/ig,"");							// [^a-z] means anything not a letter. /ig means case instensitive and global (not just first match)	
+		CurName = CurName.replace(/[^\w öüä]/ig,"");							// [^\w öüä] means anything not a "word character" (characters, numbers, underscore), space ö ü or ä. /ig means case instensitive and global (not just first match)
 		CurElo = parseInt(text.slice(text.indexOf(",")+1,text.indexOf('\r')));	// Take text from first comma to carriage return, then convert to int
 		text = text.substring(text.indexOf('\r')+2,9999);						// Remove the part from 0 to the first carriage return
 		if(CurName !== "" && !isNaN(CurElo)){									// Only add player if we found meaningful input
